@@ -90,6 +90,25 @@ class UserManager {
     }
   }
 
+  Future<bool> reserveSchedule(int fieldNumber, int scheduleNumber, String? user) async {
+    if (user == null)
+    {
+      user == "";
+    }
+    final response = await http.post(
+      Uri.parse("http://alfredo.xn--via-8ma.net/api/reserve_schedule.php?fieldNumber=$fieldNumber&scheduleNumber=$scheduleNumber&user=$user"),
+      headers: {
+          'Content-Type': 'application/json' // 'application/x-www-form-urlencoded' or whatever you need
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response.body.isEmpty;
+    } else {
+      throw Exception('Failed to reserve schedule');
+    }
+  }
+
   Future<List<Field>> fields() async {
     final response = await http.post(
       Uri.parse("http://alfredo.xn--via-8ma.net/api/fields.php"),
@@ -183,10 +202,12 @@ class Field {
 class Schedule {
   final int number;
   final String text;
+  final String user;
 
   const Schedule({
     required this.number,
     required this.text,
+    required this.user,
   });
 
   factory Schedule.fromJson(Map<String, dynamic> json) {
@@ -194,10 +215,12 @@ class Schedule {
       {
         'number': int number,
         'text': String text,
+        'user': String user,
       } =>
         Schedule(
           number: number,
           text: text,
+          user: user,
         ),
       _ => throw const FormatException('Failed to load schedule.'),
     };
@@ -231,7 +254,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  TextEditingController emailController = TextEditingController();
+  TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
 @override
@@ -251,13 +274,13 @@ return Scaffold(
                 padding:
                 const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: TextFormField(
-                  controller: emailController,
+                  controller: usernameController,
                   decoration: const InputDecoration(
-                      border: OutlineInputBorder(), labelText: "Email"),
+                      border: OutlineInputBorder(), labelText: "Username"),
                   validator: (value) {
                     
                     if (value == null || value.isEmpty) {
-                      return 'Enter your email please';
+                      return 'Enter your username please';
                       }
                       return null;
                   },
@@ -286,7 +309,7 @@ return Scaffold(
                   child: ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        UserManager._internal().loginUser(emailController.text, passwordController.text).then((user) => 
+                        UserManager._internal().loginUser(usernameController.text, passwordController.text).then((user) => 
                         {
                           UserManager.userLogged = user, 
                           if (user.role == "admin") {
@@ -326,10 +349,10 @@ class ListSoccerFieldPage extends StatefulWidget {
   const ListSoccerFieldPage({super.key});
 
   @override
-  ListSoccerFieldPageState createState() => ListSoccerFieldPageState();
+  State<ListSoccerFieldPage> createState() => _ListSoccerFieldPageState();
 }
 
-class ListSoccerFieldPageState extends State<ListSoccerFieldPage> {
+class _ListSoccerFieldPageState extends State<ListSoccerFieldPage> {
   late List<Field> _fields;
 
   @override
@@ -446,11 +469,12 @@ class SoccerFieldScheduleListPage extends StatefulWidget {
   final Field field;
 
   @override
-  SoccerFieldScheduleListPageState createState() => SoccerFieldScheduleListPageState(field: this.field);
+  // ignore: no_logic_in_create_state
+  State<SoccerFieldScheduleListPage> createState() => _SoccerFieldScheduleListPageState(field: field);
 }
 
-class SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPage> {
-  SoccerFieldScheduleListPageState({required this.field});
+class _SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPage> {
+  _SoccerFieldScheduleListPageState({required this.field});
 
   late Field field;
 
@@ -497,6 +521,11 @@ class SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPage
         itemBuilder: (BuildContext context, int index) {
           final schedule = field.schedules[index];
           final key = ValueKey<int>(schedule["number"]);
+          String reservedBy = "";
+          if (!(schedule["user"].isEmpty)) 
+          {
+             reservedBy = '- Reservada por ${schedule["user"]}';
+          }
           return Dismissible(
           background: Container(
             color: Colors.red,
@@ -514,7 +543,7 @@ class SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPage
           },
           child: ListTile(
             title: Text(
-              'Horario ${schedule["text"]}',
+              'Horario ${schedule["text"]} ${reservedBy}',
             ),
           ),
         );
@@ -528,10 +557,10 @@ class ReserveFieldPage extends StatefulWidget {
   const ReserveFieldPage({super.key});
 
   @override
-  ReserveFieldPageState createState() => ReserveFieldPageState();
+  State<ReserveFieldPage> createState() => _ReserveFieldPageState();
 }
 
-class ReserveFieldPageState extends State<ReserveFieldPage> {
+class _ReserveFieldPageState extends State<ReserveFieldPage> {
   late List<Field> _fields;
 
   @override
@@ -582,12 +611,13 @@ class ReserveSchedulePage extends StatefulWidget {
   final Field field;
 
   @override
-  ReserveSchedulePageState createState() => ReserveSchedulePageState(field: this.field);
+  // ignore: no_logic_in_create_state
+  State<ReserveSchedulePage> createState() => _ReserveSchedulePageState(field: field);
 
 }
 
-class ReserveSchedulePageState extends State<ReserveSchedulePage> {
-  ReserveSchedulePageState({required this.field});
+class _ReserveSchedulePageState extends State<ReserveSchedulePage> {
+  _ReserveSchedulePageState({required this.field});
 
   late Field field;
 
@@ -636,7 +666,7 @@ class ReserveSchedulePageState extends State<ReserveSchedulePage> {
               }
             });
           },
-          child: ReserveScheduleListTile(schedule: Schedule(number: schedule["number"], text: schedule["text"])),
+          child: ReserveScheduleListTile(field:field, schedule: Schedule(number: schedule["number"], text: schedule["text"], user: schedule["user"])),
         );
     }
   )
@@ -645,21 +675,38 @@ class ReserveSchedulePageState extends State<ReserveSchedulePage> {
 }
 
 class ReserveScheduleListTile extends StatefulWidget {
+  final Field field;
   final Schedule schedule;
-  const ReserveScheduleListTile({ Key? key, required this.schedule }) : super(key: key);
+  const ReserveScheduleListTile({ Key? key, required this.field, required this.schedule }) : super(key: key);
 
   @override
-  State<ReserveScheduleListTile> createState() => ReserveScheduleListTileState();
+  State<ReserveScheduleListTile> createState() => _ReserveScheduleListTileState();
 }
 
-class ReserveScheduleListTileState extends State<ReserveScheduleListTile> {
-    bool isReserved = false;
+class _ReserveScheduleListTileState extends State<ReserveScheduleListTile> {
+  bool isReserved = false;
 
-void toggleSwitch(bool value){
+  @override
+  void initState() {
+    super.initState();
+    
+    User? user = UserManager.userLogged;
+    isReserved = widget.schedule.user == user?.username;
+  }
+
+  void toggleSwitch(bool value){
     setState(() {
-      isReserved=!isReserved;
+      User? user = UserManager.userLogged;
+      UserManager._internal().reserveSchedule(widget.field.number, widget.schedule.number, user?.username).then((result) => 
+      {
+        if (result) {
+          setState(() {
+            isReserved=!isReserved;
+          })
+        }
+      });
     });
-}
+  }
 
   @override
   Widget build(BuildContext context) {
