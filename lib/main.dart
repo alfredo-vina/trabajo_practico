@@ -299,7 +299,7 @@ return Scaffold(
                           {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const SoccerReserveFieldPage()),
+                              MaterialPageRoute(builder: (context) => const ReserveFieldPage()),
                             )
                           }
                         });
@@ -330,7 +330,7 @@ class ListSoccerFieldPage extends StatefulWidget {
 }
 
 class ListSoccerFieldPageState extends State<ListSoccerFieldPage> {
-  late List<Field> _selected;
+  late List<Field> _fields;
 
   @override
   void initState() {
@@ -339,19 +339,19 @@ class ListSoccerFieldPageState extends State<ListSoccerFieldPage> {
   }
 
   void initializeSelection() {
-    _selected = <Field>[];
+    _fields = <Field>[];
 
     UserManager._internal().fields().then((fields) => 
     {
       setState(() {
-        _selected = fields;
+        _fields = fields;
       })
     });
   }
 
   @override
   void dispose() {
-    _selected.clear();
+    _fields.clear();
     super.dispose();
   }
 
@@ -359,9 +359,7 @@ class ListSoccerFieldPageState extends State<ListSoccerFieldPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text(
-            'Administrar Canchas',
-          ),
+          title: const Text('Administrar Canchas'),
           actions: <Widget>[
               IconButton(
                 icon: const Icon(Icons.add),
@@ -369,7 +367,7 @@ class ListSoccerFieldPageState extends State<ListSoccerFieldPage> {
                   UserManager._internal().addField().then((fields) => 
                   {
                     setState(() { 
-                    _selected = fields;
+                    _fields = fields;
                     })
                   });
                 }
@@ -377,11 +375,9 @@ class ListSoccerFieldPageState extends State<ListSoccerFieldPage> {
           ],
         ),
         body: ListBuilder(
-                isSelectionMode: false,
-                selectedList: _selected,
-                onSelectionChange: (int index) {
-                  Field field = _selected[index];
-                  //String texto = index.toString();
+                fields: _fields,
+                onSelectItem: (int index) {
+                  Field field = _fields[index];
                   Navigator.push(
                               context,
                               MaterialPageRoute(builder: (context) => SoccerFieldScheduleListPage(field:field))
@@ -394,14 +390,12 @@ class ListSoccerFieldPageState extends State<ListSoccerFieldPage> {
 class ListBuilder extends StatefulWidget {
   const ListBuilder({
     super.key,
-    required this.selectedList,
-    required this.isSelectionMode,
-    required this.onSelectionChange,
+    required this.fields,
+    required this.onSelectItem,
   });
 
-  final bool isSelectionMode;
-  final List<Field> selectedList;
-  final ValueChanged<int>? onSelectionChange;
+  final List<Field> fields;
+  final ValueChanged<int>? onSelectItem;
 
 
   @override
@@ -412,15 +406,13 @@ class _ListBuilderState extends State<ListBuilder> {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-        itemCount: widget.selectedList.length,
+        itemCount: widget.fields.length,
         itemBuilder: (BuildContext context, int index) {
-          final field = widget.selectedList[index];
+          final field = widget.fields[index];
           final key = ValueKey<int>(field.number);
           return GestureDetector(
             onTap: () {
-              if (!widget.isSelectionMode) {
-                  widget.onSelectionChange!(index);
-                }
+              widget.onSelectItem!(index);
             },
             child: Dismissible(
               background: Container(
@@ -433,7 +425,7 @@ class _ListBuilderState extends State<ListBuilder> {
                 {
                   if (result) {
                     setState(() {
-                      widget.selectedList.removeAt(index);
+                      widget.fields.removeAt(index);
                     })
                   }
                 });
@@ -444,20 +436,6 @@ class _ListBuilderState extends State<ListBuilder> {
             )
           );
       }
-        /*
-        itemBuilder: (_, int index) {
-          return ListTile(
-              onTap: () {
-                if (!widget.isSelectionMode) {
-                  setState(() {
-                    //widget.selectedList[index] = true;
-                  });
-                  widget.onSelectionChange!(index);
-                }
-              },
-              trailing: const SizedBox.shrink(),
-              title: Text('cancha ${index + 1}'));
-        }*/
         );
   }
 }
@@ -469,7 +447,6 @@ class SoccerFieldScheduleListPage extends StatefulWidget {
 
   @override
   SoccerFieldScheduleListPageState createState() => SoccerFieldScheduleListPageState(field: this.field);
-
 }
 
 class SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPage> {
@@ -484,8 +461,6 @@ class SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPage
   }
 
   void initializeSelection() {
-    //_schedules = [];
-
     UserManager._internal().fieldByNumber(field.number).then((loadField) => 
     {
       setState(() {
@@ -547,47 +522,128 @@ class SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPage
   )
     );
   }
-
 }
 
-class SoccerFieldPage extends StatelessWidget {
-  const SoccerFieldPage({super.key});
+class ReserveFieldPage extends StatefulWidget {
+  const ReserveFieldPage({super.key});
+
+  @override
+  ReserveFieldPageState createState() => ReserveFieldPageState();
+}
+
+class ReserveFieldPageState extends State<ReserveFieldPage> {
+  late List<Field> _fields;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeSelection();
+  }
+
+  void initializeSelection() {
+    _fields = <Field>[];
+
+    UserManager._internal().fields().then((fields) => 
+    {
+      setState(() {
+        _fields = fields;
+      })
+    });
+  }
+
+  @override
+  void dispose() {
+    _fields.clear();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Administrar Reservas'),
-      ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text('Go back!'),
+        appBar: AppBar(
+          title: const Text('Reservar Canchas'),
         ),
-      ),
-    );
+        body: ListBuilder(
+                fields: _fields,
+                onSelectItem: (int index) {
+                  Field field = _fields[index];
+                  Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => ReserveSchedulePage(field:field))
+                            );
+                },
+              ));
   }
 }
 
-class SoccerReserveFieldPage extends StatelessWidget {
-  const SoccerReserveFieldPage({super.key});
+class ReserveSchedulePage extends StatefulWidget {
+  const ReserveSchedulePage({super.key, required this.field});
+
+  final Field field;
+
+  @override
+  ReserveSchedulePageState createState() => ReserveSchedulePageState(field: this.field);
+
+}
+
+class ReserveSchedulePageState extends State<ReserveSchedulePage> {
+  ReserveSchedulePageState({required this.field});
+
+  late Field field;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeSelection();
+  }
+
+  void initializeSelection() {
+    UserManager._internal().fieldByNumber(field.number).then((loadField) => 
+    {
+      setState(() {
+        field.schedules.clear();
+        for (var eachSchedule in loadField.schedules) {
+          field.schedules.add(eachSchedule);
+        }
+      })
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reservar Canchas'),
+        title: Text("Horarios - Cancha ${field.number}"),
       ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
+      body: ListView.builder(
+        padding: const EdgeInsets.all(8),
+        itemCount: field.schedules.length,
+        itemBuilder: (BuildContext context, int index) {
+          final schedule = field.schedules[index];
+          final key = ValueKey<int>(schedule["number"]);
+          return Dismissible(
+          background: Container(
+            color: Colors.red,
+          ),
+          key: key,
+          onDismissed: (DismissDirection direction) {
+            UserManager._internal().removeSchedule(field.number, schedule["number"]).then((result) => 
+            {
+              if (result) {
+                setState(() {
+                  field.schedules.removeAt(index);
+                })
+              }
+            });
           },
-          child: const Text('Go back!'),
-        ),
-      ),
+          child: ListTile(
+            title: Text(
+              'Horario ${schedule["text"]}',
+            ),
+          ),
+        );
+    }
+  )
     );
   }
 }
