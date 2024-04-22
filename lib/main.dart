@@ -6,19 +6,62 @@ void main() {
   runApp(const MyApp());
 }
 
-Future<User> fetchUser(String username, String password) async {
-final response = await http.post(
+class UserManager {
+  static final UserManager _userManager = UserManager._internal();
+  static User? userLogged;
+  
+  factory UserManager() {
+    return _userManager;
+  }
+
+  Future<User> loginUser(String username, String password) async {
+    final response = await http.post(
       Uri.parse("http://alfredo.xn--via-8ma.net/api/login.php?username=$username&password=$password"),
       headers: {
           'Content-Type': 'application/json' // 'application/x-www-form-urlencoded' or whatever you need
       },
-  );
+    );
 
-  if (response.statusCode == 200) {
-    return User.fromJson(jsonDecode(response.body));
-  } else {
-    throw Exception('Failed to load user');
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load user');
+    }
   }
+
+  Future<List<Field>> addField() async {
+    final response = await http.post(
+      Uri.parse("http://alfredo.xn--via-8ma.net/api/add_field.php"),
+      headers: {
+          'Content-Type': 'application/json' // 'application/x-www-form-urlencoded' or whatever you need
+      },
+    );
+
+    if (response.statusCode == 200) {
+      Iterable l = json.decode(response.body);      
+      return List<Field>.from(l.map((model)=> Field.fromJson(model)));
+    } else {
+      throw Exception('Failed to load user');
+    }
+  }
+
+  Future<List<Field>> fields() async {
+    final response = await http.post(
+      Uri.parse("http://alfredo.xn--via-8ma.net/api/fields.php"),
+      headers: {
+          'Content-Type': 'application/json' // 'application/x-www-form-urlencoded' or whatever you need
+      },
+    );
+
+    if (response.statusCode == 200) {
+      Iterable l = json.decode(response.body);      
+      return List<Field>.from(l.map((model)=> Field.fromJson(model)));
+    } else {
+      throw Exception('Failed to load user');
+    }
+  }
+
+  UserManager._internal();
 }
 
 class User {
@@ -47,6 +90,30 @@ class User {
           role: role,
           firstname: firstname,
           lastname: lastname,
+        ),
+      _ => throw const FormatException('Failed to load user.'),
+    };
+  }
+}
+
+class Field {
+  final int number;
+  final List schedules;
+
+  const Field({
+    required this.number,
+    required this.schedules,
+  });
+
+  factory Field.fromJson(Map<String, dynamic> json) {
+    return switch (json) {
+      {
+        'number': int number,
+        'schedules': List schedules,
+      } =>
+        Field(
+          number: number,
+          schedules: schedules,
         ),
       _ => throw const FormatException('Failed to load user.'),
     };
@@ -136,11 +203,13 @@ return Scaffold(
                   child: ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        fetchUser(emailController.text, passwordController.text).then((user) => {
+                        UserManager._internal().loginUser(emailController.text, passwordController.text).then((user) => 
+                        {
+                          UserManager.userLogged = user, 
                           if (user.role == "admin") {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const SoccerFieldPage())
+                              MaterialPageRoute(builder: (context) => const ListSoccerFieldPage())
                             )
                           }
                           else 
@@ -164,6 +233,138 @@ return Scaffold(
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class ListSoccerFieldPage extends StatefulWidget {
+  const ListSoccerFieldPage({super.key});
+
+  @override
+  ListSoccerFieldPageState createState() => ListSoccerFieldPageState();
+}
+
+class ListSoccerFieldPageState extends State<ListSoccerFieldPage> {
+  late List<Field> _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeSelection();
+  }
+
+  void initializeSelection() {
+    //_selected = List<Field>.filled(1, Field(number: 1, schedules: <int>[]), growable: true);
+    _selected = <Field>[];
+
+    UserManager._internal().fields().then((fields) => 
+    {
+      setState(() {
+        _selected = fields;
+      })
+    });
+  }
+
+  @override
+  void dispose() {
+    _selected.clear();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Administrar Canchas',
+          ),
+          actions: <Widget>[
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () {
+                  UserManager._internal().addField().then((fields) => 
+                  {
+                    setState(() { 
+                    _selected = fields;
+                    })
+                  });
+                }
+              )
+          ],
+        ),
+        body: ListBuilder(
+                isSelectionMode: false,
+                selectedList: _selected,
+                onSelectionChange: (int index) {
+                  Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => SoccerFieldScheduleListPage(index))
+                            );
+                },
+              ));
+  }
+}
+
+class ListBuilder extends StatefulWidget {
+  const ListBuilder({
+    super.key,
+    required this.selectedList,
+    required this.isSelectionMode,
+    required this.onSelectionChange,
+  });
+
+  final bool isSelectionMode;
+  final List<Field> selectedList;
+  final ValueChanged<int>? onSelectionChange;
+
+
+  @override
+  State<ListBuilder> createState() => _ListBuilderState();
+}
+
+class _ListBuilderState extends State<ListBuilder> {
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+        itemCount: widget.selectedList.length,
+        itemBuilder: (_, int index) {
+          return ListTile(
+              onTap: () {
+                if (!widget.isSelectionMode) {
+                  setState(() {
+                    //widget.selectedList[index] = true;
+                  });
+                  widget.onSelectionChange!(index);
+                }
+              },
+              trailing: const SizedBox.shrink(),
+              title: Text('cancha ${index + 1}'));
+        });
+  }
+}
+
+class SoccerFieldScheduleListPage extends StatelessWidget {
+  SoccerFieldScheduleListPage(int index, {super.key})
+  {
+    i = index;
+  }
+
+  int? i = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Administrar Horarios - Cancha"),
+      ),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Go back!'),
         ),
       ),
     );
