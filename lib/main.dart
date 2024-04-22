@@ -636,14 +636,42 @@ class ReserveSchedulePageState extends State<ReserveSchedulePage> {
               }
             });
           },
-          child: ListTile(
-            title: Text(
-              'Horario ${schedule["text"]}',
-            ),
-          ),
+          child: ReserveScheduleListTile(schedule: Schedule(number: schedule["number"], text: schedule["text"])),
         );
     }
   )
+    );
+  }
+}
+
+class ReserveScheduleListTile extends StatefulWidget {
+  final Schedule schedule;
+  const ReserveScheduleListTile({ Key? key, required this.schedule }) : super(key: key);
+
+  @override
+  State<ReserveScheduleListTile> createState() => ReserveScheduleListTileState();
+}
+
+class ReserveScheduleListTileState extends State<ReserveScheduleListTile> {
+    bool isReserved = false;
+
+void toggleSwitch(bool value){
+    setState(() {
+      isReserved=!isReserved;
+    });
+}
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+
+      tileColor: isReserved?Colors.lightBlue[200]:Colors.white,
+      title: Text('Horario ${widget.schedule.text}'),
+      subtitle: Text(
+        isReserved ? "Reservada" : 'Libre',
+      ),
+     
+      trailing: Switch(value: isReserved , onChanged: toggleSwitch,activeColor: Colors.black)
     );
   }
 }
