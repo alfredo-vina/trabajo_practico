@@ -138,12 +138,10 @@ return Scaffold(
                       if (_formKey.currentState!.validate()) {
                         fetchUser(emailController.text, passwordController.text).then((user) => {
                           if (user.role == "admin") {
-                            /*
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const SoccerFieldPage(title: "Administrar"))
+                              MaterialPageRoute(builder: (context) => const SoccerFieldPage())
                             )
-                            */
                           }
                           else 
                           {
@@ -166,6 +164,27 @@ return Scaffold(
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class SoccerFieldPage extends StatelessWidget {
+  const SoccerFieldPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Administrar Reservas'),
+      ),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Go back!'),
         ),
       ),
     );
