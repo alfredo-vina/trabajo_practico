@@ -76,6 +76,21 @@ Future<Field> addScheduleForField(int fieldNumber) async {
     }
   }
 
+  Future<Field> fieldByNumber(int fieldNumber) async {
+    final response = await http.post(
+      Uri.parse("http://alfredo.xn--via-8ma.net/api/field_by_number.php?fieldNumber=$fieldNumber"),
+      headers: {
+          'Content-Type': 'application/json' // 'application/x-www-form-urlencoded' or whatever you need
+      },
+    );
+
+    if (response.statusCode == 200) {    
+      return Field.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load field');
+    }
+  }
+
   UserManager._internal();
 }
 
@@ -294,7 +309,6 @@ class ListSoccerFieldPageState extends State<ListSoccerFieldPage> {
   }
 
   void initializeSelection() {
-    //_selected = List<Field>.filled(1, Field(number: 1, schedules: <int>[]), growable: true);
     _selected = <Field>[];
 
     UserManager._internal().fields().then((fields) => 
@@ -340,7 +354,7 @@ class ListSoccerFieldPageState extends State<ListSoccerFieldPage> {
                   //String texto = index.toString();
                   Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => SoccerFieldScheduleListPage(fieldNumber:field.number, schedules: field.schedules))
+                              MaterialPageRoute(builder: (context) => SoccerFieldScheduleListPage(field:field))
                             );
                 },
               ));
@@ -385,24 +399,57 @@ class _ListBuilderState extends State<ListBuilder> {
   }
 }
 
-class SoccerFieldScheduleListPage extends StatelessWidget {
-  final int fieldNumber;
-  final List schedules;
+class SoccerFieldScheduleListPage extends StatefulWidget {
+  const SoccerFieldScheduleListPage({super.key, required this.field});
 
-  const SoccerFieldScheduleListPage({required this.fieldNumber, required this.schedules, super.key});
+  final Field field;
+
+  @override
+  SoccerFieldScheduleListPageState createState() => SoccerFieldScheduleListPageState(field: this.field);
+
+}
+
+class SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPage> {
+  SoccerFieldScheduleListPageState({required this.field});
+
+  late Field field;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeSelection();
+  }
+
+  void initializeSelection() {
+    //_schedules = [];
+
+    UserManager._internal().fieldByNumber(field.number).then((loadField) => 
+    {
+      setState(() {
+        field.schedules.clear();
+        for (var eachSchedule in loadField.schedules) {
+          field.schedules.add(eachSchedule);
+        }
+      })
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Horarios - Cancha $fieldNumber"),
+        title: Text("Horarios - Cancha ${field.number}"),
         actions: <Widget>[
               IconButton(
                 icon: const Icon(Icons.add),
                 onPressed: () {
-                  UserManager._internal().addScheduleForField(fieldNumber).then((field) => 
+                  UserManager._internal().addScheduleForField(field.number).then((resultField) => 
                   {
-                    print(field.number)
+                    setState(() {
+                      field = resultField;
+                    })
+
+                    //print(resultField.number)
                     //this.schedules = field.schedules;
                   });
                 }
@@ -411,17 +458,18 @@ class SoccerFieldScheduleListPage extends StatelessWidget {
       ),
       body: ListView.builder(
     padding: const EdgeInsets.all(8),
-    itemCount: schedules.length,
+    itemCount: field.schedules.length,
     itemBuilder: (BuildContext context, int index) {
       return Container(
         height: 50,
         color: Colors.white,
-        child: Center(child: Text('Horario ${schedules[index]["text"]}')),
+        child: Center(child: Text('Horario ${field.schedules[index]["text"]}')),
       );
     }
   )
     );
   }
+
 }
 
 class SoccerFieldPage extends StatelessWidget {
