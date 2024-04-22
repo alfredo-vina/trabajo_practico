@@ -45,7 +45,7 @@ class UserManager {
     }
   }
 
-Future<Field> addScheduleForField(int fieldNumber) async {
+  Future<Field> addScheduleForField(int fieldNumber) async {
     final response = await http.post(
       Uri.parse("http://alfredo.xn--via-8ma.net/api/add_schedule.php?fieldNumber=$fieldNumber"),
       headers: {
@@ -57,6 +57,36 @@ Future<Field> addScheduleForField(int fieldNumber) async {
       return Field.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to load user');
+    }
+  }
+
+  Future<bool> removeField(int fieldNumber) async {
+    final response = await http.post(
+      Uri.parse("http://alfredo.xn--via-8ma.net/api/remove_field.php?fieldNumber=$fieldNumber"),
+      headers: {
+          'Content-Type': 'application/json' // 'application/x-www-form-urlencoded' or whatever you need
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response.body.isEmpty;
+    } else {
+      throw Exception('Failed to remove field');
+    }
+  }
+
+  Future<bool> removeSchedule(int fieldNumber, int scheduleNumber) async {
+    final response = await http.post(
+      Uri.parse("http://alfredo.xn--via-8ma.net/api/remove_schedule.php?fieldNumber=$fieldNumber&scheduleNumber=$scheduleNumber"),
+      headers: {
+          'Content-Type': 'application/json' // 'application/x-www-form-urlencoded' or whatever you need
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response.body.isEmpty;
+    } else {
+      throw Exception('Failed to remove schedule');
     }
   }
 
@@ -383,6 +413,38 @@ class _ListBuilderState extends State<ListBuilder> {
   Widget build(BuildContext context) {
     return ListView.builder(
         itemCount: widget.selectedList.length,
+        itemBuilder: (BuildContext context, int index) {
+          final field = widget.selectedList[index];
+          final key = ValueKey<int>(field.number);
+          return GestureDetector(
+            onTap: () {
+              if (!widget.isSelectionMode) {
+                  widget.onSelectionChange!(index);
+                }
+            },
+            child: Dismissible(
+              background: Container(
+                color: Colors.red,
+              ),
+              key: key,
+              
+              onDismissed: (DismissDirection direction) {
+                UserManager._internal().removeField(field.number).then((result) => 
+                {
+                  if (result) {
+                    setState(() {
+                      widget.selectedList.removeAt(index);
+                    })
+                  }
+                });
+              },
+              child: ListTile(
+                title: Text('cancha ${field.number}'),
+              ),
+            )
+          );
+      }
+        /*
         itemBuilder: (_, int index) {
           return ListTile(
               onTap: () {
@@ -395,7 +457,8 @@ class _ListBuilderState extends State<ListBuilder> {
               },
               trailing: const SizedBox.shrink(),
               title: Text('cancha ${index + 1}'));
-        });
+        }*/
+        );
   }
 }
 
@@ -465,13 +528,18 @@ class SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPage
           ),
           key: key,
           onDismissed: (DismissDirection direction) {
-            setState(() {
-              field.schedules.removeAt(index);
+            UserManager._internal().removeSchedule(field.number, schedule["number"]).then((result) => 
+            {
+              if (result) {
+                setState(() {
+                  field.schedules.removeAt(index);
+                })
+              }
             });
           },
           child: ListTile(
             title: Text(
-              'Item ${schedule["text"]}',
+              'Horario ${schedule["text"]}',
             ),
           ),
         );
