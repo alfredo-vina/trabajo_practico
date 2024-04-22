@@ -448,23 +448,33 @@ class SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPage
                     setState(() {
                       field = resultField;
                     })
-
-                    //print(resultField.number)
-                    //this.schedules = field.schedules;
                   });
                 }
               )
           ],
       ),
       body: ListView.builder(
-    padding: const EdgeInsets.all(8),
-    itemCount: field.schedules.length,
-    itemBuilder: (BuildContext context, int index) {
-      return Container(
-        height: 50,
-        color: Colors.white,
-        child: Center(child: Text('Horario ${field.schedules[index]["text"]}')),
-      );
+        padding: const EdgeInsets.all(8),
+        itemCount: field.schedules.length,
+        itemBuilder: (BuildContext context, int index) {
+          final schedule = field.schedules[index];
+          final key = ValueKey<int>(schedule["number"]);
+          return Dismissible(
+          background: Container(
+            color: Colors.red,
+          ),
+          key: key,
+          onDismissed: (DismissDirection direction) {
+            setState(() {
+              field.schedules.removeAt(index);
+            });
+          },
+          child: ListTile(
+            title: Text(
+              'Item ${schedule["text"]}',
+            ),
+          ),
+        );
     }
   )
     );
