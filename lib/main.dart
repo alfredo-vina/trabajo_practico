@@ -521,7 +521,7 @@ class _SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPag
         itemBuilder: (BuildContext context, int index) {
           final schedule = field.schedules[index];
           final key = ValueKey<int>(schedule["number"]);
-          String reservedBy = "";
+          String reservedBy = "- Libre";
           if (!(schedule["user"].isEmpty)) 
           {
              reservedBy = '- Reservada por ${schedule["user"]}';
