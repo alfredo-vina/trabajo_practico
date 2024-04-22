@@ -45,6 +45,21 @@ class UserManager {
     }
   }
 
+Future<Field> addScheduleForField(int fieldNumber) async {
+    final response = await http.post(
+      Uri.parse("http://alfredo.xn--via-8ma.net/api/add_schedule.php?fieldNumber=$fieldNumber"),
+      headers: {
+          'Content-Type': 'application/json' // 'application/x-www-form-urlencoded' or whatever you need
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return Field.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load user');
+    }
+  }
+
   Future<List<Field>> fields() async {
     final response = await http.post(
       Uri.parse("http://alfredo.xn--via-8ma.net/api/fields.php"),
@@ -115,7 +130,31 @@ class Field {
           number: number,
           schedules: schedules,
         ),
-      _ => throw const FormatException('Failed to load user.'),
+      _ => throw const FormatException('Failed to load field.'),
+    };
+  }
+}
+
+class Schedule {
+  final int number;
+  final String text;
+
+  const Schedule({
+    required this.number,
+    required this.text,
+  });
+
+  factory Schedule.fromJson(Map<String, dynamic> json) {
+    return switch (json) {
+      {
+        'number': int number,
+        'text': String text,
+      } =>
+        Schedule(
+          number: number,
+          text: text,
+        ),
+      _ => throw const FormatException('Failed to load schedule.'),
     };
   }
 }
@@ -123,7 +162,6 @@ class Field {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -298,9 +336,11 @@ class ListSoccerFieldPageState extends State<ListSoccerFieldPage> {
                 isSelectionMode: false,
                 selectedList: _selected,
                 onSelectionChange: (int index) {
+                  Field field = _selected[index];
+                  //String texto = index.toString();
                   Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => SoccerFieldScheduleListPage(index))
+                              MaterialPageRoute(builder: (context) => SoccerFieldScheduleListPage(fieldNumber:field.number, schedules: field.schedules))
                             );
                 },
               ));
@@ -346,27 +386,40 @@ class _ListBuilderState extends State<ListBuilder> {
 }
 
 class SoccerFieldScheduleListPage extends StatelessWidget {
-  SoccerFieldScheduleListPage(int index, {super.key})
-  {
-    i = index;
-  }
+  final int fieldNumber;
+  final List schedules;
 
-  int? i = 0;
+  const SoccerFieldScheduleListPage({required this.fieldNumber, required this.schedules, super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Administrar Horarios - Cancha"),
+        title: Text("Horarios - Cancha $fieldNumber"),
+        actions: <Widget>[
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () {
+                  UserManager._internal().addScheduleForField(fieldNumber).then((field) => 
+                  {
+                    print(field.number)
+                    //this.schedules = field.schedules;
+                  });
+                }
+              )
+          ],
       ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text('Go back!'),
-        ),
-      ),
+      body: ListView.builder(
+    padding: const EdgeInsets.all(8),
+    itemCount: schedules.length,
+    itemBuilder: (BuildContext context, int index) {
+      return Container(
+        height: 50,
+        color: Colors.white,
+        child: Center(child: Text('Horario ${schedules[index]["text"]}')),
+      );
+    }
+  )
     );
   }
 }
