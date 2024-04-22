@@ -202,12 +202,12 @@ class Field {
 class Schedule {
   final int number;
   final String text;
-  final String user;
+  String? user;
 
-  const Schedule({
+  Schedule({
     required this.number,
     required this.text,
-    required this.user,
+    this.user,
   });
 
   factory Schedule.fromJson(Map<String, dynamic> json) {
@@ -215,7 +215,7 @@ class Schedule {
       {
         'number': int number,
         'text': String text,
-        'user': String user,
+        'user': String? user,
       } =>
         Schedule(
           number: number,
@@ -697,11 +697,19 @@ class _ReserveScheduleListTileState extends State<ReserveScheduleListTile> {
   void toggleSwitch(bool value){
     setState(() {
       User? user = UserManager.userLogged;
-      UserManager._internal().reserveSchedule(widget.field.number, widget.schedule.number, user?.username).then((result) => 
+      String? username = (!isReserved) ? user?.username : "";
+      UserManager._internal().reserveSchedule(widget.field.number, widget.schedule.number, username).then((result) => 
       {
         if (result) {
           setState(() {
             isReserved=!isReserved;
+            // updating object 
+            widget.schedule.user = username;
+            widget.field.schedules.forEach((schedule) { 
+              if (schedule["number"] == widget.schedule.number) {
+                schedule["user"] = username;
+              }
+            });
           })
         }
       });
