@@ -1,7 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
+}
+
+Future<User> fetchUser(String username, String password) async {
+final response = await http.post(
+      Uri.parse("http://alfredo.xn--via-8ma.net/api/login.php?username=$username&password=$password"),
+      headers: {
+          'Content-Type': 'application/json' // 'application/x-www-form-urlencoded' or whatever you need
+      },
+  );
+
+  if (response.statusCode == 200) {
+    return User.fromJson(jsonDecode(response.body));
+  } else {
+    throw Exception('Failed to load user');
+  }
+}
+
+class User {
+  final String username;
+  final String role;
+  final String firstname;
+  final String lastname;
+
+  const User({
+    required this.username,
+    required this.role,
+    required this.firstname,
+    required this.lastname,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return switch (json) {
+      {
+        'username': String username,
+        'role': String role,
+        'firstname': String firstname,
+        'lastname': String lastname,
+      } =>
+        User(
+          username: username,
+          role: role,
+          firstname: firstname,
+          lastname: lastname,
+        ),
+      _ => throw const FormatException('Failed to load user.'),
+    };
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -16,7 +65,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const LoginPage(title: 'Reserva de canchas'),
+      home: const LoginPage(title: 'Sistema de Reserva'),
     );
   }
 }
@@ -31,9 +80,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-final _formKey = GlobalKey<FormState>();
-TextEditingController emailController = TextEditingController();
-TextEditingController passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+
 @override
 Widget build(BuildContext context) {
 return Scaffold(
@@ -55,6 +105,7 @@ return Scaffold(
                   decoration: const InputDecoration(
                       border: OutlineInputBorder(), labelText: "Email"),
                   validator: (value) {
+                    
                     if (value == null || value.isEmpty) {
                       return 'Enter your email please';
                       }
@@ -85,10 +136,23 @@ return Scaffold(
                   child: ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const SoccerFieldPage()),
-                        );
+                        fetchUser(emailController.text, passwordController.text).then((user) => {
+                          if (user.role == "admin") {
+                            /*
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SoccerFieldPage(title: "Administrar"))
+                            )
+                            */
+                          }
+                          else 
+                          {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SoccerReserveFieldPage()),
+                            )
+                          }
+                        });
                       } 
                       else {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -108,14 +172,14 @@ return Scaffold(
   }
 }
 
-class SoccerFieldPage extends StatelessWidget {
-  const SoccerFieldPage({super.key});
+class SoccerReserveFieldPage extends StatelessWidget {
+  const SoccerReserveFieldPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Añadir Canchas'),
+        title: const Text('Reservar Canchas'),
       ),
       body: Center(
         child: ElevatedButton(
