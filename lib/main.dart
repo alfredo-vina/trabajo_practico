@@ -509,7 +509,7 @@ class _SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPag
           },
           child: ListTile(
             title: Text(
-              'Horario ${schedule["text"]} ${reservedBy}',
+              'Horario ${schedule["text"]} $reservedBy',
             ),
           ),
         );
