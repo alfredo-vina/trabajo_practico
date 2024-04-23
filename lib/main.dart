@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:trabajo_practico/business/field.dart';
 import 'package:trabajo_practico/business/user.dart';
 import 'package:trabajo_practico/managers/user_manager.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 void main() {
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   runApp(const MyApp());
 }
 
@@ -72,6 +75,17 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController firstnameController = TextEditingController();
   TextEditingController lastnameController = TextEditingController();
 
+@override
+  void initState() {
+    super.initState();
+    initialization();
+  }
+
+  void initialization() async {
+    await Future.delayed(const Duration(seconds: 3));
+    FlutterNativeSplash.remove();
+  }
+  
 @override
 Widget build(BuildContext context) {
 return Scaffold(
