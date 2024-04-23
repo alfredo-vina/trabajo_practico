@@ -4,6 +4,7 @@ import 'package:trabajo_practico/business/field.dart';
 import 'package:trabajo_practico/business/user.dart';
 import 'package:trabajo_practico/managers/user_manager.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -47,8 +48,26 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Reservas',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          onPrimary: Colors.white,
+          primary: Color.fromARGB(255, 13, 122, 70)
+          ),
+          
         useMaterial3: true,
+        textTheme: TextTheme(
+          displayLarge: const TextStyle(
+            fontSize: 72,
+            fontWeight: FontWeight.bold,
+          ),
+          // ···
+          titleLarge: GoogleFonts.aBeeZee(
+            fontSize: 20,
+            fontStyle: FontStyle.italic,
+          ),
+          bodyMedium: GoogleFonts.merriweather(),
+          displaySmall: GoogleFonts.pacifico(),
+        ),
       ),
       home: const LoginPage(title: 'Sistema de Reserva'),
     );
@@ -92,8 +111,11 @@ return Scaffold(
       appBar: AppBar(
         title: Text(
           widget.title,
-          style: TextStyle(fontFamily: "RobotoMono")
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
         ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: (_loginVisible) ? 
       SingleChildScrollView(
@@ -174,6 +196,15 @@ return Scaffold(
                               );
                             }
                           },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.onSecondary,
+                            
+                            textStyle: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold
+                            )
+                          ),
                           child: const Text('Ingresar'),
                         ),
                       ),
@@ -285,6 +316,15 @@ return Scaffold(
                               );
                             }
                           },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.onSecondary,
+                            
+                            textStyle: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold
+                            )
+                          ),
                           child: const Text('Registrar'),
                         ),
                       ),
@@ -296,6 +336,7 @@ return Scaffold(
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Theme.of(context).colorScheme.onSecondary,
         onPressed: () {
           setState((){
             _opacityLogin = 0;
@@ -362,7 +403,17 @@ class _ListSoccerFieldPageState extends State<ListSoccerFieldPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Administrar Canchas'),
+          iconTheme: IconThemeData(
+            color: Colors.white, 
+          ),
+          title:  Text(
+            "Administrar Canchas",
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          
           actions: <Widget>[
               IconButton(
                 icon: const Icon(Icons.add),
@@ -435,6 +486,12 @@ class _ListBuilderState extends State<ListBuilder> {
               },
               child: ListTile(
                 title: Text('cancha ${field.number}'),
+                leading:  Image.asset('assets/field.png'),
+                trailing: Wrap(
+                  children: <Widget>[
+                    Icon(Icons.arrow_forward_ios), 
+                  ],
+                ),
               ),
             )
           );
@@ -480,7 +537,16 @@ class _SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPag
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Horarios - Cancha ${field.number}"),
+        iconTheme: IconThemeData(
+          color: Colors.white, 
+        ),
+        title:  Text(
+          "Horarios - Cancha ${field.number}",
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         actions: <Widget>[
               IconButton(
                 icon: const Icon(Icons.add),
@@ -501,10 +567,10 @@ class _SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPag
         itemBuilder: (BuildContext context, int index) {
           final schedule = field.schedules[index];
           final key = ValueKey<int>(schedule["number"]);
-          String reservedBy = "- Libre";
+          String reservedBy = "Libre";
           if (!(schedule["user"].isEmpty)) 
           {
-             reservedBy = '- Reservada por ${schedule["user"]}';
+             reservedBy = 'Reservada por ${schedule["user"]}';
           }
           return Dismissible(
           background: Container(
@@ -523,8 +589,9 @@ class _SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPag
           },
           child: ListTile(
             title: Text(
-              'Horario ${schedule["text"]} $reservedBy',
+              'Horario ${schedule["text"]}',
             ),
+            subtitle: Text('$reservedBy', textAlign: TextAlign.left),
           ),
         );
     }
@@ -570,7 +637,16 @@ class _ReserveFieldPageState extends State<ReserveFieldPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Reservar Canchas'),
+          iconTheme: IconThemeData(
+            color: Colors.white, 
+          ),
+          title:  Text(
+            'Reservar Canchas',
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
         body: ListBuilder(
                 fields: _fields,
@@ -623,8 +699,17 @@ class _ReserveSchedulePageState extends State<ReserveSchedulePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Horarios - Cancha ${field.number}"),
-      ),
+          iconTheme: IconThemeData(
+            color: Colors.white, 
+          ),
+          title:  Text(
+            "Horarios - Cancha ${field.number}",
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
       body: ListView.builder(
         padding: const EdgeInsets.all(8),
         itemCount: field.schedules.length,
@@ -702,13 +787,13 @@ class _ReserveScheduleListTileState extends State<ReserveScheduleListTile> {
   Widget build(BuildContext context) {
     return ListTile(
 
-      tileColor: isReserved?Colors.lightBlue[200]:Colors.white,
+      tileColor: isReserved?Colors.lightGreen[200]:Colors.white,
       title: Text('Horario ${widget.schedule.text}'),
       subtitle: Text(
         isReserved || !canReserve ? "Reservada" : 'Libre',
       ),
      
-      trailing: Switch(value: isReserved , onChanged: (canReserve) ? toggleSwitch : null, activeColor: Colors.black)
+      trailing: Switch(value: isReserved , onChanged: (canReserve) ? toggleSwitch : null, activeColor: Colors.black, activeThumbImage: Image.asset('assets/ball.png').image, inactiveThumbImage: Image.asset('assets/ball.png').image)
     );
   }
 }
