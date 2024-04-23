@@ -31,6 +31,21 @@ class UserManager {
     }
   }
 
+  Future<bool> addUser(String username, String password, String firstname, String lastname) async {
+    final response = await http.post(
+      Uri.parse("http://alfredo.xn--via-8ma.net/api/add_user.php?username=$username&password=$password&firstname=$firstname&lastname=$lastname"),
+      headers: {
+          'Content-Type': 'application/json' // 'application/x-www-form-urlencoded' or whatever you need
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response.body.isEmpty;
+    } else {
+      throw Exception('Failed to load user');
+    }
+  }
+
   Future<List<Field>> addField() async {
     final response = await http.post(
       Uri.parse("http://alfredo.xn--via-8ma.net/api/add_field.php"),
@@ -353,7 +368,7 @@ return Scaffold(
                               );
                             }
                           },
-                          child: const Text('Ingresarr'),
+                          child: const Text('Ingresar'),
                         ),
                       ),
                     ),
@@ -448,30 +463,21 @@ return Scaffold(
                       child: Center(
                         child: ElevatedButton(
                           onPressed: () {
-                            // if (_formKey.currentState!.validate()) {
-                            //   UserManager._internal().loginUser(usernameController.text, passwordController.text).then((user) => 
-                            //   {
-                            //     UserManager.userLogged = user, 
-                            //     if (user.role == "admin") {
-                            //       Navigator.push(
-                            //         context,
-                            //         MaterialPageRoute(builder: (context) => const ListSoccerFieldPage())
-                            //       )
-                            //     }
-                            //     else 
-                            //     {
-                            //       Navigator.push(
-                            //         context,
-                            //         MaterialPageRoute(builder: (context) => const ReserveFieldPage()),
-                            //       )
-                            //     }
-                            //   });
-                            // } 
-                            // else {
-                            //   ScaffoldMessenger.of(context).showSnackBar(
-                            //     const SnackBar(content: Text('Please fill input')),
-                            //   );
-                            // }
+                            if (_formKey.currentState!.validate()) {
+                              UserManager._internal().addUser(usernameController.text, passwordController.text, firstnameController.text, lastnameController.text).then((fields) => 
+                              {
+                                setState((){
+                                  _loginVisible = true;
+                                  _opacityLogin = 1;
+                                  _opacitySignup = 0;
+                                })   
+                              });
+                            } 
+                            else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Please fill input')),
+                              );
+                            }
                           },
                           child: const Text('Registrar'),
                         ),
@@ -485,8 +491,6 @@ return Scaffold(
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Call setState. This tells Flutter to rebuild the
-          // UI with the changes.
           setState((){
             _opacityLogin = 0;
             _opacitySignup = 0;
@@ -507,8 +511,6 @@ return Scaffold(
               }
             });
           });
-            
-          
         },
         tooltip: 'Registrarse',
         child: (_loginVisible) ? const Icon(Icons.app_registration) : const Icon(Icons.login_rounded),
@@ -857,6 +859,7 @@ class ReserveScheduleListTile extends StatefulWidget {
 
 class _ReserveScheduleListTileState extends State<ReserveScheduleListTile> {
   bool isReserved = false;
+  bool canReserve = false;
 
   @override
   void initState() {
@@ -864,6 +867,7 @@ class _ReserveScheduleListTileState extends State<ReserveScheduleListTile> {
     
     User? user = UserManager.userLogged;
     isReserved = widget.schedule.user == user?.username;
+    canReserve = widget.schedule.user == "" || widget.schedule.user == user?.username;
   }
 
   void toggleSwitch(bool value){
@@ -895,10 +899,10 @@ class _ReserveScheduleListTileState extends State<ReserveScheduleListTile> {
       tileColor: isReserved?Colors.lightBlue[200]:Colors.white,
       title: Text('Horario ${widget.schedule.text}'),
       subtitle: Text(
-        isReserved ? "Reservada" : 'Libre',
+        isReserved || !canReserve ? "Reservada" : 'Libre',
       ),
      
-      trailing: Switch(value: isReserved , onChanged: toggleSwitch,activeColor: Colors.black)
+      trailing: Switch(value: isReserved , onChanged: (canReserve) ? toggleSwitch : null, activeColor: Colors.black)
     );
   }
 }
