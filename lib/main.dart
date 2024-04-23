@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -253,93 +255,263 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  bool _loginVisible = true;
+  double _opacityLogin = 1;
+  double _opacitySignup = 0;
+
   final _formKey = GlobalKey<FormState>();
   TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  TextEditingController firstnameController = TextEditingController();
+  TextEditingController lastnameController = TextEditingController();
 
 @override
 Widget build(BuildContext context) {
 return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(
+          widget.title,
+          style: TextStyle(fontFamily: "RobotoMono")
+        ),
       ),
-      body: Form(
-        key: _formKey,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Padding(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                child: TextFormField(
-                  controller: usernameController,
-                  decoration: const InputDecoration(
-                      border: OutlineInputBorder(), labelText: "Username"),
-                  validator: (value) {
-                    
-                    if (value == null || value.isEmpty) {
-                      return 'Enter your username please';
-                      }
-                      return null;
-                  },
-                ),
-              ),
-              Padding(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                child: TextFormField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                      border: OutlineInputBorder(), labelText: "Password"),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Enter your password please';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              Padding(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 16.0),
-                child: Center(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        UserManager._internal().loginUser(usernameController.text, passwordController.text).then((user) => 
-                        {
-                          UserManager.userLogged = user, 
-                          if (user.role == "admin") {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const ListSoccerFieldPage())
-                            )
+      body: (_loginVisible) ? 
+      SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: 
+        Form(
+          key: _formKey,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: 
+            AnimatedOpacity(
+              opacity: _opacityLogin,
+              duration: const Duration(seconds: 1),
+              child:
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                      child: TextFormField(
+                        controller: usernameController,
+                        decoration: const InputDecoration(
+                            border: OutlineInputBorder(), labelText: "Usuario"),
+                        validator: (value) {
+                          
+                          if (value == null || value.isEmpty) {
+                            return 'Ingrese su nombre de usuario';
+                            }
+                            return null;
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                      child: TextFormField(
+                        controller: passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                            border: OutlineInputBorder(), labelText: "Contraseña"),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Ingrese su contraseña';
                           }
-                          else 
-                          {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const ReserveFieldPage()),
-                            )
-                          }
-                        });
-                      } 
-                      else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please fill input')),
-                        );
-                      }
-                    },
-                    child: const Text('Login'),
-                  ),
+                          return null;
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 16.0),
+                      child: Center(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              UserManager._internal().loginUser(usernameController.text, passwordController.text).then((user) => 
+                              {
+                                UserManager.userLogged = user, 
+                                if (user.role == "admin") {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const ListSoccerFieldPage())
+                                  )
+                                }
+                                else 
+                                {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const ReserveFieldPage()),
+                                  )
+                                }
+                              });
+                            } 
+                            else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Please fill input')),
+                              );
+                            }
+                          },
+                          child: const Text('Ingresarr'),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+            ),
           ),
         ),
+      ) :
+      SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: 
+        Form(
+          key: _formKey,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: 
+            AnimatedOpacity(
+              opacity: _opacitySignup,
+              duration: const Duration(seconds: 1),
+              child:
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                      child: TextFormField(
+                        controller: usernameController,
+                        decoration: const InputDecoration(
+                            border: OutlineInputBorder(), labelText: "Usuario"),
+                        validator: (value) {
+                          
+                          if (value == null || value.isEmpty) {
+                            return 'Ingrese su nombre de usuario';
+                            }
+                            return null;
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                      child: TextFormField(
+                        controller: firstnameController,
+                        decoration: const InputDecoration(
+                            border: OutlineInputBorder(), labelText: "Nombre"),
+                        validator: (value) {
+                          
+                          if (value == null || value.isEmpty) {
+                            return 'Ingrese su nombre';
+                            }
+                            return null;
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                      child: TextFormField(
+                        controller: lastnameController,
+                        decoration: const InputDecoration(
+                            border: OutlineInputBorder(), labelText: "Apellido"),
+                        validator: (value) {
+                          
+                          if (value == null || value.isEmpty) {
+                            return 'Igrese su apellido';
+                            }
+                            return null;
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                      child: TextFormField(
+                        controller: passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                            border: OutlineInputBorder(), labelText: "Contraseña"),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Ingrese su contraseña';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 16.0),
+                      child: Center(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // if (_formKey.currentState!.validate()) {
+                            //   UserManager._internal().loginUser(usernameController.text, passwordController.text).then((user) => 
+                            //   {
+                            //     UserManager.userLogged = user, 
+                            //     if (user.role == "admin") {
+                            //       Navigator.push(
+                            //         context,
+                            //         MaterialPageRoute(builder: (context) => const ListSoccerFieldPage())
+                            //       )
+                            //     }
+                            //     else 
+                            //     {
+                            //       Navigator.push(
+                            //         context,
+                            //         MaterialPageRoute(builder: (context) => const ReserveFieldPage()),
+                            //       )
+                            //     }
+                            //   });
+                            // } 
+                            // else {
+                            //   ScaffoldMessenger.of(context).showSnackBar(
+                            //     const SnackBar(content: Text('Please fill input')),
+                            //   );
+                            // }
+                          },
+                          child: const Text('Registrar'),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+            ),
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Call setState. This tells Flutter to rebuild the
+          // UI with the changes.
+          setState((){
+            _opacityLogin = 0;
+            _opacitySignup = 0;
+          });
+          Timer t = Timer(
+          Duration(seconds:1),(){
+            setState((){
+              _loginVisible = !_loginVisible;
+              if (_loginVisible)
+              {
+                _opacityLogin = 1;
+                _opacitySignup = 0;
+              }
+              else 
+              {
+                _opacityLogin = 0;
+                _opacitySignup = 1;
+              }
+            });
+          });
+            
+          
+        },
+        tooltip: 'Registrarse',
+        child: (_loginVisible) ? const Icon(Icons.app_registration) : const Icon(Icons.login_rounded),
       ),
     );
   }
