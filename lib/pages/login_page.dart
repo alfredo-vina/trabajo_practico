@@ -102,25 +102,28 @@ return Scaffold(
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 16.0),
                       child: Center(
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             if (_formKey.currentState!.validate()) {
-                              UserManager.instance.loginUser(usernameController.text, passwordController.text).then((user) => 
-                              {
-                                UserManager.userLogged = user, 
+                              try {
+                                var user = await UserManager.instance.loginUser(usernameController.text, passwordController.text);
+                                
+                                UserManager.userLogged = user; 
                                 if (user.role == "admin") {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(builder: (context) => const ListSoccerFieldPage())
-                                  )
+                                  );
                                 }
                                 else 
                                 {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(builder: (context) => const ReserveFieldPage()),
-                                  )
+                                  );
                                 }
-                              });
+                              } catch (err) {
+                                _showToast(context, err.toString().split(":")[1].trim() );
+                              }
                             } 
                             else {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -293,6 +296,16 @@ return Scaffold(
         },
         tooltip: 'Registrarse',
         child: (_loginVisible) ? const Icon(Icons.app_registration) : const Icon(Icons.login_rounded),
+      ),
+    );
+  }
+
+  void _showToast(BuildContext context, String message) {
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        action: SnackBarAction(label: 'Cerrar', onPressed: scaffold.hideCurrentSnackBar),
       ),
     );
   }
