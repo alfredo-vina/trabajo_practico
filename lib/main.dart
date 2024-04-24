@@ -33,7 +33,7 @@ class Schedule {
   }
 
   set user(String ?user) {
-    DateFormat dateFormat = DateFormat('yyyy-MM-dd');
+    DateFormat dateFormat =   DateFormat('yyyy-MM-dd');
     String formattedDate = dateFormat.format(UserManager.selectedDate);
 
     this.bookings[formattedDate] = user;
@@ -596,14 +596,6 @@ class _SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPag
           DropdownDatePicker(
             locale: "en",
             dateformatorder: OrderFormat.DMY, // default is myd
-            // inputDecoration: InputDecoration(
-            //     enabledBorder: const OutlineInputBorder(
-            //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
-            //     ),
-            //     helperText: '',
-            //     contentPadding: const EdgeInsets.all(8),
-            //     border: OutlineInputBorder(
-            //         borderRadius: BorderRadius.circular(10))), // optional
             isDropdownHideUnderline: true, // optional
             isFormValidator: true, // optional
             startYear: 1900, // optional
@@ -612,19 +604,31 @@ class _SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPag
             selectedMonth: _selectedMonth, // optional
             selectedYear: _selectedYear, // optional
             onChangedDay: (value) {
-              _selectedDay = int.parse(value!);
-              UserManager.selectedDate = DateTime(_selectedYear as int, _selectedMonth as int, _selectedDay as int);
-              print('onChangedDay: $value');
+              setState(() {
+                _selectedDay = int.parse(value!);
+                UserManager.selectedDate = DateTime(_selectedYear as int, _selectedMonth as int, _selectedDay as int);
+                print('onChangedDay: $value');
+                field.schedules.clear();
+              });
+              initializeSelection();
             },
             onChangedMonth: (value) {
-              _selectedMonth = int.parse(value!);
-              UserManager.selectedDate = DateTime(_selectedYear as int, _selectedMonth as int, _selectedDay as int);
-              print('onChangedMonth: $value');
+              setState(() {
+                _selectedMonth = int.parse(value!);
+                UserManager.selectedDate = DateTime(_selectedYear as int, _selectedMonth as int, _selectedDay as int);
+                print('onChangedMonth: $value');
+                field.schedules.clear();
+              });
+              initializeSelection();
             },
             onChangedYear: (value) {
-              _selectedYear = int.parse(value!);
-              UserManager.selectedDate = DateTime(_selectedYear as int, _selectedMonth as int, _selectedDay as int);
-              print('onChangedYear: $value');
+              setState(() {
+                _selectedYear = int.parse(value!);
+                UserManager.selectedDate = DateTime(_selectedYear as int, _selectedMonth as int, _selectedDay as int);
+                print('onChangedYear: $value');
+                field.schedules.clear();
+              });
+              initializeSelection();
             },
           ),
           Column (
@@ -757,9 +761,18 @@ class _ReserveSchedulePageState extends State<ReserveSchedulePage> {
 
   late Field field;
 
+  int? _selectedDay = 1;
+  int? _selectedMonth = 1;
+  int? _selectedYear = 2023;
+
   @override
   void initState() {
     super.initState();
+
+    _selectedDay = UserManager.selectedDate.day;
+    _selectedMonth = UserManager.selectedDate.month;
+    _selectedYear = UserManager.selectedDate.year;
+
     initializeSelection();
   }
 
@@ -790,34 +803,82 @@ class _ReserveSchedulePageState extends State<ReserveSchedulePage> {
           ),
           backgroundColor: Theme.of(context).colorScheme.primary,
         ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(8),
-        itemCount: field.schedules.length,
-        itemBuilder: (BuildContext context, int index) {
-          final schedule = field.schedules[index];
-          final key = ValueKey<int>(schedule["number"]);
-          
-          Map bookings = (schedule["bookings"].length == 0) ? Map() : schedule["bookings"] as Map;
-
-          return Dismissible(
-          background: Container(
-            color: Colors.red,
+      body: 
+      Column (
+        children: [
+          DropdownDatePicker(
+            locale: "en",
+            dateformatorder: OrderFormat.DMY, // default is myd
+            isDropdownHideUnderline: true, // optional
+            isFormValidator: true, // optional
+            startYear: 1900, // optional
+            width: 10, // optional
+            selectedDay: _selectedDay, // optional
+            selectedMonth: _selectedMonth, // optional
+            selectedYear: _selectedYear, // optional
+            onChangedDay: (value) {
+              setState(() {
+                _selectedDay = int.parse(value!);
+                UserManager.selectedDate = DateTime(_selectedYear as int, _selectedMonth as int, _selectedDay as int);
+                print('onChangedDay: $value');
+                field.schedules.clear();
+              });
+              initializeSelection();
+            },
+            onChangedMonth: (value) {
+              setState(() {
+                _selectedMonth = int.parse(value!);
+                UserManager.selectedDate = DateTime(_selectedYear as int, _selectedMonth as int, _selectedDay as int);
+                print('onChangedMonth: $value');
+                field.schedules.clear();
+              });
+              initializeSelection();
+            },
+            onChangedYear: (value) {
+              setState(() {
+                _selectedYear = int.parse(value!);
+                UserManager.selectedDate = DateTime(_selectedYear as int, _selectedMonth as int, _selectedDay as int);
+                print('onChangedYear: $value');
+                field.schedules.clear();
+              });
+              initializeSelection();
+            },
           ),
-          key: key,
-          onDismissed: (DismissDirection direction) {
-            UserManager.instance.removeSchedule(field.number, schedule["number"]).then((result) => 
-            {
-              if (result) {
-                setState(() {
-                  field.schedules.removeAt(index);
-                })
-              }
-            });
-          },
-          child: ReserveScheduleListTile(field:field, schedule: Schedule(number: schedule["number"], text: schedule["text"], bookings:bookings )),
-        );
-    }
-  )
+          Column (
+            children: [
+              ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.all(8),
+                itemCount: field.schedules.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final schedule = field.schedules[index];
+                  final key = ValueKey<int>(schedule["number"]);
+                  
+                  Map bookings = (schedule["bookings"].length == 0) ? Map() : schedule["bookings"] as Map;
+
+                  return Dismissible(
+                      background: Container(
+                        color: Colors.red,
+                      ),
+                      key: key,
+                      onDismissed: (DismissDirection direction) {
+                        UserManager.instance.removeSchedule(field.number, schedule["number"]).then((result) => 
+                        {
+                          if (result) {
+                            setState(() {
+                              field.schedules.removeAt(index);
+                            })
+                          }
+                        });
+                      },
+                      child: ReserveScheduleListTile(field:field, schedule: Schedule(number: schedule["number"], text: schedule["text"], bookings:bookings )),
+                    );
+                },
+                separatorBuilder: (BuildContext context, int index) => const Divider(),
+              ),
+           ]),
+        ],
+      )
     );
   }
 }
@@ -857,7 +918,7 @@ class _ReserveScheduleListTileState extends State<ReserveScheduleListTile> {
             widget.schedule.user = username;
             widget.field.schedules.forEach((schedule) { 
               if (schedule["number"] == widget.schedule.number) {
-                schedule["user"] = username;
+                  widget.schedule.user = username;
               }
             });
           })
