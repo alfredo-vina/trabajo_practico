@@ -29,7 +29,9 @@ class _ListBuilderState extends State<ListBuilder> {
             onTap: () {
               widget.onSelectItem!(index);
             },
-            child: Dismissible(
+            child: 
+              (UserManager.userLogged?.role == "admin") ? 
+              Dismissible(
               background: Container(
                 color: Colors.red,
               ),
@@ -55,8 +57,18 @@ class _ListBuilderState extends State<ListBuilder> {
                 ),
               ),
             )
+            :
+            ListTile(
+                title: Text('cancha ${field.number}'),
+                leading:  Image.asset('assets/field.png'),
+                trailing: Wrap(
+                  children: <Widget>[
+                    Icon(Icons.arrow_forward_ios), 
+                  ],
+                ),
+              )
           );
-      }
-        );
+        }
+      );
   }
 }

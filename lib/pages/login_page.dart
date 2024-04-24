@@ -277,8 +277,7 @@ return Scaffold(
             _opacityLogin = 0;
             _opacitySignup = 0;
           });
-          Timer t = Timer(
-          Duration(seconds:1),(){
+          Timer(Duration(seconds:1),(){
             setState((){
               _loginVisible = !_loginVisible;
               if (_loginVisible)

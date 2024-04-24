@@ -117,7 +117,7 @@ class _ReserveSchedulePageState extends State<ReserveSchedulePage> {
                   
                   Map bookings = (schedule["bookings"].length == 0) ? Map() : schedule["bookings"] as Map;
 
-                  return Dismissible(
+                  return (UserManager.userLogged?.role == "admin") ? Dismissible(
                       background: Container(
                         color: Colors.red,
                       ),
@@ -133,7 +133,9 @@ class _ReserveSchedulePageState extends State<ReserveSchedulePage> {
                         });
                       },
                       child: ReserveScheduleListTile(field:field, schedule: Schedule(number: schedule["number"], text: schedule["text"], bookings:bookings )),
-                    );
+                    )
+                    :
+                    ReserveScheduleListTile(field:field, schedule: Schedule(number: schedule["number"], text: schedule["text"], bookings:bookings ));
                 },
                 separatorBuilder: (BuildContext context, int index) => const Divider(),
               ),
