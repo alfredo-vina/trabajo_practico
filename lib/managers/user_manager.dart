@@ -22,9 +22,14 @@ class UserManager {
     );
 
     if (response.statusCode == 200) {
-      return User.fromJson(jsonDecode(response.body));
+      if (!response.body.isEmpty) {
+        return User.fromJson(jsonDecode(response.body));
+      }
+      else {
+        throw Exception('Cotraseña incorrecta');
+      }
     } else {
-      throw Exception('Failed to load user');
+      throw Exception('Fallo al cargar usuario');
     }
   }
 
@@ -39,7 +44,7 @@ class UserManager {
     if (response.statusCode == 200) {
       return response.body.isEmpty;
     } else {
-      throw Exception('Failed to load user');
+      throw Exception('Fallo al cargar usuario');
     }
   }
 
@@ -55,7 +60,7 @@ class UserManager {
       Iterable l = json.decode(response.body);      
       return List<Field>.from(l.map((model)=> Field.fromJson(model)));
     } else {
-      throw Exception('Failed to load user');
+      throw Exception('Fallo al cargar cancha');
     }
   }
 
@@ -70,7 +75,7 @@ class UserManager {
     if (response.statusCode == 200) {
       return Field.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Failed to load user');
+      throw Exception('Fallo al cargar horario');
     }
   }
 
@@ -85,7 +90,7 @@ class UserManager {
     if (response.statusCode == 200) {
       return response.body.isEmpty;
     } else {
-      throw Exception('Failed to remove field');
+      throw Exception('Fallo al eliminar cancha');
     }
   }
 
@@ -100,7 +105,7 @@ class UserManager {
     if (response.statusCode == 200) {
       return response.body.isEmpty;
     } else {
-      throw Exception('Failed to remove schedule');
+      throw Exception('Fallo al eliminar horario');
     }
   }
 
@@ -123,7 +128,7 @@ class UserManager {
     if (response.statusCode == 200) {
       return response.body.isEmpty;
     } else {
-      throw Exception('Failed to reserve schedule');
+      throw Exception('Fallo al reservar horario');
     }
   }
 
@@ -139,7 +144,7 @@ class UserManager {
       Iterable l = json.decode(response.body);      
       return List<Field>.from(l.map((model)=> Field.fromJson(model)));
     } else {
-      throw Exception('Failed to load user');
+      throw Exception('Fallo al cargar cancha');
     }
   }
 
@@ -154,7 +159,7 @@ class UserManager {
     if (response.statusCode == 200) {    
       return Field.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Failed to load field');
+      throw Exception('Fallo al cargar cancha');
     }
   }
 
