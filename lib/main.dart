@@ -673,42 +673,6 @@ class _SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPag
                 separatorBuilder: (BuildContext context, int index) => const Divider(),
               ),
            ]),
-              /*
-ListView.builder(
-        padding: const EdgeInsets.all(8),
-        itemCount: field.schedules.length,
-        itemBuilder: (BuildContext context, int index) {
-          final schedule = field.schedules[index];
-          final key = ValueKey<int>(schedule["number"]);
-          String reservedBy = "Libre";
-          if (!(schedule["user"].isEmpty)) 
-          {
-             reservedBy = 'Reservada por ${schedule["user"]}';
-          }
-          return Dismissible(
-          background: Container(
-            color: Colors.red,
-          ),
-          key: key,
-          onDismissed: (DismissDirection direction) {
-            UserManager.instance.removeSchedule(field.number, schedule["number"]).then((result) => 
-            {
-              if (result) {
-                setState(() {
-                  field.schedules.removeAt(index);
-                })
-              }
-            });
-          },
-          child: ListTile(
-            title: Text(
-              'Horario ${schedule["text"]}',
-            ),
-            subtitle: Text('$reservedBy', textAlign: TextAlign.left),
-          ),
-        );
-    }
-  )*/
         ],
       )
       
