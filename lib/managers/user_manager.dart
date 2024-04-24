@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:trabajo_practico/business/field.dart';
 import 'package:trabajo_practico/business/user.dart';
 import 'package:http/http.dart' as http;
@@ -6,6 +7,7 @@ import 'dart:convert';
 class UserManager {
   static final UserManager _userManager = UserManager._internal();
   static User? userLogged;
+  static DateTime selectedDate = DateTime.now();
   
   factory UserManager() {
     return _userManager;
@@ -107,8 +109,12 @@ class UserManager {
     {
       user == "";
     }
+
+    DateFormat dateFormat = DateFormat('yyyy-MM-dd');
+    String date = dateFormat.format(UserManager.selectedDate);
+
     final response = await http.post(
-      Uri.parse("http://alfredo.xn--via-8ma.net/api/reserve_schedule.php?fieldNumber=$fieldNumber&scheduleNumber=$scheduleNumber&user=$user"),
+      Uri.parse("http://alfredo.xn--via-8ma.net/api/reserve_schedule.php?fieldNumber=$fieldNumber&scheduleNumber=$scheduleNumber&user=$user&date=$date"),
       headers: {
           'Content-Type': 'application/json' // 'application/x-www-form-urlencoded' or whatever you need
       },

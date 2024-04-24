@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'package:datepicker_dropdown/order_format.dart';
 import 'package:flutter/material.dart';
 import 'package:trabajo_practico/business/field.dart';
 import 'package:trabajo_practico/business/user.dart';
 import 'package:trabajo_practico/managers/user_manager.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:datepicker_dropdown/datepicker_dropdown.dart';
+import 'package:intl/intl.dart'; // for date format
+import 'package:intl/date_symbol_data_local.dart'; // for other locales
 
 void main() {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -15,12 +19,30 @@ void main() {
 class Schedule {
   final int number;
   final String text;
-  String? user;
+  final Map bookings;
+
+  String? get user
+  {
+    DateFormat dateFormat = DateFormat('yyyy-MM-dd');
+    String formattedDate = dateFormat.format(UserManager.selectedDate);
+
+    Map map = bookings;
+    String? user = (map.containsKey(formattedDate)) ? map[formattedDate] : "";
+
+    return user == null ? "" : user;
+  }
+
+  set user(String ?user) {
+    DateFormat dateFormat = DateFormat('yyyy-MM-dd');
+    String formattedDate = dateFormat.format(UserManager.selectedDate);
+
+    this.bookings[formattedDate] = user;
+  }
 
   Schedule({
     required this.number,
     required this.text,
-    this.user,
+    required this.bookings,
   });
 
   factory Schedule.fromJson(Map<String, dynamic> json) {
@@ -28,12 +50,12 @@ class Schedule {
       {
         'number': int number,
         'text': String text,
-        'user': String? user,
+        'bookings': Map bookings,
       } =>
         Schedule(
           number: number,
           text: text,
-          user: user,
+          bookings: bookings,
         ),
       _ => throw const FormatException('Failed to load schedule.'),
     };
@@ -515,9 +537,17 @@ class _SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPag
 
   late Field field;
 
+  int? _selectedDay = 1;
+  int? _selectedMonth = 1;
+  int? _selectedYear = 2023;
+
   @override
   void initState() {
     super.initState();
+    _selectedDay = UserManager.selectedDate.day;
+    _selectedMonth = UserManager.selectedDate.month;
+    _selectedYear = UserManager.selectedDate.year;
+
     initializeSelection();
   }
 
@@ -561,7 +591,90 @@ class _SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPag
               )
           ],
       ),
-      body: ListView.builder(
+      body: Column (
+        children: [
+          DropdownDatePicker(
+            locale: "en",
+            dateformatorder: OrderFormat.DMY, // default is myd
+            // inputDecoration: InputDecoration(
+            //     enabledBorder: const OutlineInputBorder(
+            //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
+            //     ),
+            //     helperText: '',
+            //     contentPadding: const EdgeInsets.all(8),
+            //     border: OutlineInputBorder(
+            //         borderRadius: BorderRadius.circular(10))), // optional
+            isDropdownHideUnderline: true, // optional
+            isFormValidator: true, // optional
+            startYear: 1900, // optional
+            width: 10, // optional
+            selectedDay: _selectedDay, // optional
+            selectedMonth: _selectedMonth, // optional
+            selectedYear: _selectedYear, // optional
+            onChangedDay: (value) {
+              _selectedDay = int.parse(value!);
+              UserManager.selectedDate = DateTime(_selectedYear as int, _selectedMonth as int, _selectedDay as int);
+              print('onChangedDay: $value');
+            },
+            onChangedMonth: (value) {
+              _selectedMonth = int.parse(value!);
+              UserManager.selectedDate = DateTime(_selectedYear as int, _selectedMonth as int, _selectedDay as int);
+              print('onChangedMonth: $value');
+            },
+            onChangedYear: (value) {
+              _selectedYear = int.parse(value!);
+              UserManager.selectedDate = DateTime(_selectedYear as int, _selectedMonth as int, _selectedDay as int);
+              print('onChangedYear: $value');
+            },
+          ),
+          Column (
+            children: [
+              ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.all(8),
+                itemCount: field.schedules.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final schedule = field.schedules[index];
+                  final key = ValueKey<int>(schedule["number"]);
+                  String reservedBy = "Libre";
+                  DateFormat dateFormat = DateFormat('yyyy-MM-dd');
+                  String formattedDate = dateFormat.format(UserManager.selectedDate);
+
+                  Map map = (schedule["bookings"].length == 0) ? new Map() : schedule["bookings"] as Map;
+                  String user = (map.containsKey(formattedDate)) ? map[formattedDate] : "";
+                  // ignore: unnecessary_null_comparison
+                  if ((user != null) && !(user.isEmpty)) 
+                  {
+                    reservedBy = 'Reservada por ${user}';
+                  }
+                  return Dismissible(
+                  background: Container(
+                    color: Colors.red,
+                  ),
+                  key: key,
+                  onDismissed: (DismissDirection direction) {
+                    UserManager.instance.removeSchedule(field.number, schedule["number"]).then((result) => 
+                    {
+                      if (result) {
+                        setState(() {
+                          field.schedules.removeAt(index);
+                        })
+                      }
+                    });
+                  },
+                  child: ListTile(
+                    title: Text(
+                        'Horario ${schedule["text"]}',
+                      ),
+                      subtitle: Text('$reservedBy', textAlign: TextAlign.left),
+                    )
+                  );
+                },
+                separatorBuilder: (BuildContext context, int index) => const Divider(),
+              ),
+           ]),
+              /*
+ListView.builder(
         padding: const EdgeInsets.all(8),
         itemCount: field.schedules.length,
         itemBuilder: (BuildContext context, int index) {
@@ -595,7 +708,10 @@ class _SoccerFieldScheduleListPageState extends State<SoccerFieldScheduleListPag
           ),
         );
     }
-  )
+  )*/
+        ],
+      )
+      
     );
   }
 }
@@ -716,6 +832,9 @@ class _ReserveSchedulePageState extends State<ReserveSchedulePage> {
         itemBuilder: (BuildContext context, int index) {
           final schedule = field.schedules[index];
           final key = ValueKey<int>(schedule["number"]);
+          
+          Map bookings = (schedule["bookings"].length == 0) ? Map() : schedule["bookings"] as Map;
+
           return Dismissible(
           background: Container(
             color: Colors.red,
@@ -731,7 +850,7 @@ class _ReserveSchedulePageState extends State<ReserveSchedulePage> {
               }
             });
           },
-          child: ReserveScheduleListTile(field:field, schedule: Schedule(number: schedule["number"], text: schedule["text"], user: schedule["user"])),
+          child: ReserveScheduleListTile(field:field, schedule: Schedule(number: schedule["number"], text: schedule["text"], bookings:bookings )),
         );
     }
   )
