@@ -5,7 +5,8 @@ Este proyecto es la tarea final del curso Diplomatura en Desarrollo de Aplicacio
 El proyecto es una aplicación de reserva de canchas de fútbol 5.
 La aplicación consta de dos tipos de usuario - usuario administrador y usuarios comunes.
 El usuario administrador fue previamente creado y no se puede crear desde la app, el nickname es admin y password admin.
-La aplicación permite el registro de usuarios comunes igualmente tiene dos usuarios comunes previamentee creados las credenciales de acceso son las siguientes:
+La aplicación permite el registro de usuarios comunes. 
+Igualmente tiene dos usuarios comunes previamentee creados las credenciales de acceso son las siguientes:
 user:user y password:user
 user:user2 y password:user2
 
@@ -45,4 +46,5 @@ Salimos de la app.
 El video adjunto:
 
 - [Link del video](http://alfredo.xn--via-8ma.net/video/demo.mp4)
+
 
